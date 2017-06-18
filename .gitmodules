@@ -1,0 +1,6 @@
+[submodule "submodules/dox"]
+	path = submodules/dox
+	url = https://github.com/radiganm/dox.git
+[submodule "submodules/dispmodule"]
+	path = submodules/dispmodule
+	url = https://github.com/radiganm/dispmodule.git

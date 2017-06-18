@@ -1,0 +1,33 @@
+#!/usr/bin/make -f
+## boostrap.mk (for libmat)
+## Copyright 2016 Mac Radigan
+## All Rights Reserved
+
+.PHONY: bootstrap update packages-apt install
+.DEFAULT_GOAL := bootstrap
+
+bootstrap:
+	$(MAKE) -C ./submodules
+	autoreconf --force --install
+
+install: bootstrap
+	./configure --prefix=/opt/local && make && sudo make install
+
+update:
+	$(MAKE) -C ./submodules update
+
+packages-apt:
+	sudo apt-get install -y ecl
+	sudo apt-get install -y autoconf
+	sudo apt-get install -y automake
+	sudo apt-get install -y libtool
+	sudo apt-get install -y build-essential
+	sudo apt-get install -y gfortran
+	sudo apt-get install -y libblas-dev
+	sudo apt-get install -y liblapack-dev
+	sudo apt-get install -y libgmp3-dev
+	sudo apt-get install -y libz-dev
+	sudo apt-get install -y libatomic-ops-dev
+	sudo apt-get install -y libfuse-dev
+
+## *EOF*
