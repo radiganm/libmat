@@ -1,0 +1,31 @@
+/* fmatrix_{{prefix}}.h
+ * Copyright 2016 Mac Radigan
+ * All Rights Reserved
+ * {{notice}}
+ */
+
+#include "../common/status.h"
+#include "../matrix/matrix_{{prefix}}.h"
+#include <stdlib.h>
+#include <inttypes.h>
+
+#ifndef fmatrix_{{prefix}}_h
+#define fmatrix_{{prefix}}_h
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+  extern void __fmat_{{prefix}}_MOD_init(FMatrix_{{prefix}}_t *matrix);
+  extern void __fmat_{{prefix}}_MOD_alloc(FMatrix_{{prefix}}_t matrix, int64_t *n1, int64_t *n2);
+  extern void __fmat_{{prefix}}_MOD_eye(FMatrix_{{prefix}}_t matrix);
+  extern void __fmat_{{prefix}}_MOD_show(FMatrix_{{prefix}}_t matrix);
+  extern void __fmat_{{prefix}}_MOD_show_named(FMatrix_{{prefix}}_t matrix, size_t n, char *name);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+/* *EOF* */

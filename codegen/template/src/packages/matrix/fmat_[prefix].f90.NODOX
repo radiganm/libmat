@@ -1,0 +1,103 @@
+!! fmat_{{prefix}}.f90
+!! Copyright 2016 Mac Radigan
+!! All Rights Reserved
+!! {{notice}}
+
+  module fmat_{{prefix}}
+
+    use mat
+    use dispmodule
+    use iso_c_binding
+    implicit none
+
+    type :: Matrix_{{prefix}}
+      type({{ftype}}), dimension(:,:), allocatable  :: data(:,:)
+      type(MatrixInfo)                           :: info
+    end type
+
+    public  :: init
+    public  :: eye
+    public  :: alloc
+    public  :: show
+    public  :: show_named
+
+  contains
+
+    subroutine init(p)
+      
+      type(c_ptr), intent(inout)            :: p
+      type(Matrix_{{prefix}}), pointer               :: x
+      allocate(x)
+      p = c_loc(x)
+      
+    end subroutine init
+
+    subroutine alloc(x, n1, n2)
+      
+      type(Matrix_{{prefix}}), intent(inout)         :: x
+      type(integer*8), intent(in)           :: n1
+      type(integer*8), intent(in)           :: n2
+      x%info%n_dims = 2
+      x%info%dims(1) = n1
+      x%info%dims(2) = n2
+      allocate(x%data(n1,n2))
+      
+    end subroutine alloc
+
+    subroutine eye(x)
+      
+      type(Matrix_{{prefix}}), intent(inout)         :: x
+      type(integer*8)                       :: k
+      forall(k=1:maxval(x%info%dims)) x%data(k,k) = 1.0
+      
+    end subroutine eye
+
+    subroutine show(x)
+      
+      type(Matrix_{{prefix}}), intent(in)            :: x
+      type(disp_settings)                   :: ds
+      ds = disp_get()
+      call disp_set(unit=8)
+      call disp_set_factory
+      call disp_set(digmax=5)
+      call disp_set(zeroas='*')
+      call disp_set(matsep=' | ')
+{% if fclass[:3] == 'int' %}
+     !call disp(int(x%data, 8))
+{% elif fclass[:3] == 'flo' %}
+     !call disp(xname, real(x%data, 4))
+{% else %}
+      call disp(x%data)
+{% endif %}
+      
+    end subroutine show
+
+    subroutine show_named(x, sname_length, sname)
+      
+      type(Matrix_{{prefix}}), intent(in)                       :: x
+      integer(c_size_t), intent(in), value             :: sname_length
+      type(c_ptr), intent(in), value                   :: sname
+      character(kind=c_char,len=sname_length), pointer :: xname
+      type(disp_settings)                              :: ds
+      ds = disp_get()
+     !call disp_set_factory
+     !call disp_set(unit=8)
+      call disp_set(zeroas='*')
+      call disp_set(digmax=5)
+      call disp_set(style='-pad')
+      call disp_set(matsep=' | ')
+      call c_f_pointer(sname, xname)
+{% if fclass[:3] == 'int' %}
+     !call disp(xname, int(x%data, 8))
+{% elif fclass[:3] == 'flo' %}
+     !call disp(xname, real(x%data, 4))
+{% else %}
+      call disp(xname, x%data)
+{% endif %}
+      
+    end subroutine show_named
+
+
+  end module fmat_{{prefix}}
+
+!! *EOF*
