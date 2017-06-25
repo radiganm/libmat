@@ -15,82 +15,24 @@
       type(MatrixInfo)                           :: info
     end type
 
-    public  :: c2f
-    public  :: eye
     public  :: add
     public  :: axby
-    public  :: mul
+    public  :: c2f
     public  :: dot
+    public  :: eye
+    public  :: fill
+    public  :: mul
+    public  :: pow
     public  :: reshape
-    public  :: trace
-    public  :: transpose_in_place
     public  :: show_named
     public  :: show_named2
+    public  :: trace
+    public  :: transpose_in_place
 {% if fclass[:3] != 'int' %}
     public  :: svd
 {% endif %}
 
   contains
-
-    subroutine reshape(x, n1, n2)
-      
-      type(CMatrix_{{prefix}}), intent(inout)        :: x
-      type(integer*8), intent(in)                    :: n1
-      type(integer*8), intent(in)                    :: n2
-      type({{ftype}}), pointer                       :: p(:,:)
-      call c_f_pointer(x%data,  p,  [x%info%dims(1),  x%info%dims(2)])
-      x%info%dims(1) = n1
-      x%info%dims(2) = n2
-      
-    end subroutine reshape
-
-    subroutine trace(x, y)
-      
-      type(CMatrix_{{prefix}}), intent(in)           :: x
-      type({{ftype}}), intent(out)                   :: y
-      type({{ftype}}), pointer                       :: p(:,:)
-      type(integer*8)                                :: k
-      call c_f_pointer(x%data,  p,  [x%info%dims(1),  x%info%dims(2)])
-      y = 0
-      do k=1,maxval(x%info%dims) 
-        y = y + p(k,k)
-      enddo
-      
-    end subroutine trace
-
-    subroutine c2f(x, p)
-      
-      type(CMatrix_{{prefix}}), intent(in)           :: x
-      type({{ftype}}), pointer, intent(inout)  :: p(:,:)
-      type(integer*8)                       :: k
-      call c_f_pointer(x%data, p, [x%info%dims(1), x%info%dims(2)])
-      
-    end subroutine c2f
-
-    subroutine show_named2(p, sname_length, sname)
-      
-      type({{ftype}}), pointer, intent(in)                :: p(:,:)
-      integer(c_size_t), intent(in), value             :: sname_length
-      type(c_ptr), intent(in), value                   :: sname
-      character(kind=c_char,len=sname_length), pointer :: xname
-      type(disp_settings)                              :: ds
-      ds = disp_get()
-     !call disp_set_factory
-     !call disp_set(unit=8)
-      call disp_set(zeroas='*')
-      call disp_set(digmax=5)
-      call disp_set(style='-pad')
-      call disp_set(matsep=' | ')
-      call c_f_pointer(sname, xname)
-{% if fclass[:3] == 'int' %}
-     !call disp(xname, int(a, 8))
-{% elif fclass[:3] == 'flo' %}
-     !call disp(xname, real(a, 4))
-{% else %}
-      call disp(xname, p)
-{% endif %}
-
-    end subroutine show_named2
 
     subroutine add(y,x1,x2)
       
@@ -130,20 +72,14 @@
       
     end subroutine axby
 
-    subroutine mul(y,x1,x2)
+    subroutine c2f(x, p)
       
-      type(CMatrix_{{prefix}}), intent(inout)        :: y
-      type(CMatrix_{{prefix}}), intent(inout)        :: x1
-      type(CMatrix_{{prefix}}), intent(inout)        :: x2
-      type({{ftype}}), pointer                       :: p(:,:)
-      type({{ftype}}), pointer                       :: p1(:,:)
-      type({{ftype}}), pointer                       :: p2(:,:)
-      call c_f_pointer(y%data,  p,  [y%info%dims(1),  y%info%dims(2)])
-      call c_f_pointer(x1%data, p1, [x1%info%dims(1), x1%info%dims(2)])
-      call c_f_pointer(x2%data, p2, [x2%info%dims(1), x2%info%dims(2)])
-      p = matmul(p1,p2) ! NB. compiling with -fexternal-blas converts this call to DGEMM
+      type(CMatrix_{{prefix}}), intent(in)           :: x
+      type({{ftype}}), pointer, intent(inout)  :: p(:,:)
+      type(integer*8)                       :: k
+      call c_f_pointer(x%data, p, [x%info%dims(1), x%info%dims(2)])
       
-    end subroutine mul
+    end subroutine c2f
 
     subroutine dot(y,x1,x2)
       
@@ -160,15 +96,6 @@
       
     end subroutine dot
 
-    subroutine transpose_in_place(x)
-      
-      type(CMatrix_{{prefix}}), intent(inout)        :: x
-      type({{ftype}}), pointer                       :: p(:,:)
-      call c_f_pointer(x%data, p, [x%info%dims(1), x%info%dims(2)])
-      p = transpose(p)
-      
-    end subroutine transpose_in_place
-
     subroutine eye(x)
       
       type(CMatrix_{{prefix}}), intent(inout)        :: x
@@ -178,6 +105,73 @@
       forall(k=1:maxval(x%info%dims)) p(k,k) = 1.0
       
     end subroutine eye
+
+    subroutine fill(x, val, r1, r2, c1, c2)
+      
+      type(CMatrix_{{prefix}}), intent(inout)        :: x
+      type({{ftype}}), pointer                       :: p(:,:)
+      type({{ftype}}), intent(in)                    :: val
+      type(integer*8), intent(in)                    :: r1
+      type(integer*8), intent(in)                    :: r2
+      type(integer*8), intent(in)                    :: c1
+      type(integer*8), intent(in)                    :: c2
+      type(integer*8)                                :: r
+      type(integer*8)                                :: c
+      call c_f_pointer(x%data, p, [x%info%dims(1), x%info%dims(2)])
+      forall(r=r1:r2, c=c1:c2) p(r+1,c+1) = val
+      
+    end subroutine fill
+
+    subroutine mul(y,x1,x2)
+      
+      type(CMatrix_{{prefix}}), intent(inout)        :: y
+      type(CMatrix_{{prefix}}), intent(inout)        :: x1
+      type(CMatrix_{{prefix}}), intent(inout)        :: x2
+      type({{ftype}}), pointer                       :: p(:,:)
+      type({{ftype}}), pointer                       :: p1(:,:)
+      type({{ftype}}), pointer                       :: p2(:,:)
+      call c_f_pointer(y%data,  p,  [y%info%dims(1),  y%info%dims(2)])
+      call c_f_pointer(x1%data, p1, [x1%info%dims(1), x1%info%dims(2)])
+      call c_f_pointer(x2%data, p2, [x2%info%dims(1), x2%info%dims(2)])
+      p = matmul(p1,p2) ! NB. compiling with -fexternal-blas converts this call to DGEMM
+      
+    end subroutine mul
+
+    subroutine pow(y, x, n)
+      
+      type(CMatrix_{{prefix}}), intent(inout)        :: y
+      type(CMatrix_{{prefix}}), intent(inout)        :: x
+      type({{ftype}}), pointer                       :: a(:,:)
+      type({{ftype}}), pointer                       :: b(:,:)
+      type({{ftype}}), intent(in)                    :: n
+      type(integer*8)                                :: k1
+      type(integer*8)                                :: k2
+      type(integer*8)                                :: k
+      type(integer*8)                                :: r
+      type(integer*8)                                :: c
+      call c_f_pointer(x%data, a, [x%info%dims(1), x%info%dims(2)])
+      call c_f_pointer(y%data, b, [y%info%dims(1), y%info%dims(2)])
+      if (0 == int(real(n))) then
+        forall(r=1:x%info%dims(1), c=1:x%info%dims(2)) b(r,c) = 1.0
+        return
+      end if
+      do k = 1, int(real(n))
+        b = matmul(b, a)
+      end do
+      
+    end subroutine pow
+
+    subroutine reshape(x, n1, n2)
+      
+      type(CMatrix_{{prefix}}), intent(inout)        :: x
+      type(integer*8), intent(in)                    :: n1
+      type(integer*8), intent(in)                    :: n2
+      type({{ftype}}), pointer                       :: p(:,:)
+      call c_f_pointer(x%data,  p,  [x%info%dims(1),  x%info%dims(2)])
+      x%info%dims(1) = n1
+      x%info%dims(2) = n2
+      
+    end subroutine reshape
 
     subroutine show_named(x, sname_length, sname)
       
@@ -205,6 +199,54 @@
 {% endif %}
       
     end subroutine show_named
+
+    subroutine show_named2(p, sname_length, sname)
+      
+      type({{ftype}}), pointer, intent(in)                :: p(:,:)
+      integer(c_size_t), intent(in), value             :: sname_length
+      type(c_ptr), intent(in), value                   :: sname
+      character(kind=c_char,len=sname_length), pointer :: xname
+      type(disp_settings)                              :: ds
+      ds = disp_get()
+     !call disp_set_factory
+     !call disp_set(unit=8)
+      call disp_set(zeroas='*')
+      call disp_set(digmax=5)
+      call disp_set(style='-pad')
+      call disp_set(matsep=' | ')
+      call c_f_pointer(sname, xname)
+{% if fclass[:3] == 'int' %}
+     !call disp(xname, int(a, 8))
+{% elif fclass[:3] == 'flo' %}
+     !call disp(xname, real(a, 4))
+{% else %}
+      call disp(xname, p)
+{% endif %}
+
+    end subroutine show_named2
+
+    subroutine trace(x, y)
+      
+      type(CMatrix_{{prefix}}), intent(in)           :: x
+      type({{ftype}}), intent(out)                   :: y
+      type({{ftype}}), pointer                       :: p(:,:)
+      type(integer*8)                                :: k
+      call c_f_pointer(x%data,  p,  [x%info%dims(1),  x%info%dims(2)])
+      y = 0
+      do k=1,maxval(x%info%dims) 
+        y = y + p(k,k)
+      enddo
+      
+    end subroutine trace
+
+    subroutine transpose_in_place(x)
+      
+      type(CMatrix_{{prefix}}), intent(inout)        :: x
+      type({{ftype}}), pointer                       :: p(:,:)
+      call c_f_pointer(x%data, p, [x%info%dims(1), x%info%dims(2)])
+      p = transpose(p)
+      
+    end subroutine transpose_in_place
 
 {% if fclass[:3] != 'int' %}
     subroutine svd(x, s, vt)

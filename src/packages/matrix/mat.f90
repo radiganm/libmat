@@ -1,7 +1,7 @@
 !! mat.f90
 !! Copyright 2016 Mac Radigan
 !! All Rights Reserved
-!! NOTICE:  This source file was automatically generated on 2017-06-18 00:39:00 by dox.
+!! NOTICE:  This source file was automatically generated on 2017-06-25 03:25:54 by dox.
 
   module mat
 

@@ -2,39 +2,45 @@
 ## Copyright 2016 Mac Radigan
 ## All Rights Reserved
 
-AM_LDFLAGS  = -pthread                                                       \
-              -L/usr/lib -ldl -lm                                            \
-              /usr/lib/libblas.a                                             \
-              /usr/lib/liblapack.a                                           \
-              /usr/lib/gcc/x86_64-linux-gnu/5/libatomic.a                    \
-              /usr/lib/x86_64-linux-gnu/libgmp.a                             \
-              /usr/lib/x86_64-linux-gnu/libcurses.a                          \
-              ./submodules/dispmodule/lib/libdispmodule.a                     
+AM_LDFLAGS  = -pthread                                                         \
+              -L/usr/lib -ldl -lm                                              \
+              /usr/lib/libblas.a                                               \
+              /usr/lib/liblapack.a                                             \
+              -L/usr/lib/gcc/x86_64-linux-gnu/5 -lquadmath                     \
+              -L/usr/lib/gcc/x86_64-linux-gnu/5 -lgfortran                     \
+              /usr/lib/gcc/x86_64-linux-gnu/5/libatomic.a                      \
+              /usr/lib/x86_64-linux-gnu/libgmp.a                               \
+              /usr/lib/x86_64-linux-gnu/libcurses.a                            \
+              ./submodules/dispmodule/lib/libdispmodule.a                       
 
-AM_CPPFLAGS = -I$(top_srcdir)/include                                        \
+AM_CPPFLAGS = -I$(top_srcdir)/include                                          \
               -std=c++11
 AM_FCFLAGS  = -Jmod -fexternal-blas
 
-mat_ldadd                 = libmat.la                                                    \
-                           /usr/lib/libblas.a                                            \
-                           /usr/lib/liblapack.a                                          \
-                           /usr/lib/gcc/x86_64-linux-gnu/5/libatomic.a                   \
-                           /usr/lib/x86_64-linux-gnu/libanl.a                            \
-                           /usr/lib/x86_64-linux-gnu/libgmp.a                            \
-                           /usr/lib/x86_64-linux-gnu/libcurses.a                         \
-                           ./submodules/dispmodule/lib/libdispmodule.a                   \
-                           -ldl -lm                                                      \
-                           -L/usr/lib/gcc/x86_64-linux-gnu/5 -lanl                       \
-                           -L/usr/lib/gcc/x86_64-linux-gnu/5 -lgmp                       \
-                           -L/usr/lib/gcc/x86_64-linux-gnu/5 -latomic                    \
-                           -L/usr/lib/gcc/x86_64-linux-gnu/5 -lcurses                    \
-                           -L/usr/lib/gcc/x86_64-linux-gnu/5 -lquadmath                  \
+mat_ldadd                 = libmat.la                                          \
+                           /usr/lib/libblas.a                                  \
+                           /usr/lib/liblapack.a                                \
+                           /usr/lib/gcc/x86_64-linux-gnu/5/libatomic.a         \
+                           /usr/lib/x86_64-linux-gnu/libanl.a                  \
+                           /usr/lib/x86_64-linux-gnu/libgmp.a                  \
+                           /usr/lib/x86_64-linux-gnu/libcurses.a               \
+                           ./submodules/dispmodule/lib/libdispmodule.a         \
+                           -ldl -lm                                            \
+                           -L/usr/lib/gcc/x86_64-linux-gnu/5 -lanl             \
+                           -L/usr/lib/gcc/x86_64-linux-gnu/5 -lgmp             \
+                           -L/usr/lib/gcc/x86_64-linux-gnu/5 -latomic          \
+                           -L/usr/lib/gcc/x86_64-linux-gnu/5 -lcurses          \
+                           -L/usr/lib/gcc/x86_64-linux-gnu/5 -lquadmath        \
                            -L/usr/lib/gcc/x86_64-linux-gnu/5 -lgfortran
 
-bin_PROGRAMS             = test_cmatrix
+bin_PROGRAMS             = test_cmatrix                                        \
+                           test_tmatrix
 
 test_cmatrix_SOURCES     = src/tests/test_cmatrix.cc
 test_cmatrix_LDADD       = $(mat_ldadd)
+
+test_tmatrix_SOURCES     = src/tests/test_tmatrix.cc
+test_tmatrix_LDADD       = $(mat_ldadd)
 
 lib_LTLIBRARIES          = libmat.la
 libmat_la_SOURCES        = src/packages/common/status.cc                       \
@@ -83,6 +89,14 @@ pkginclude_HEADERS       = include/packages/common/status.h                    \
                            include/packages/matrix/cmatrix_c.h                 \
                            include/packages/matrix/cmatrix_s.h                 \
                            include/packages/matrix/cmatrix_u8.h                \
-                           include/packages/matrix/cmatrix_u16.h
+                           include/packages/matrix/cmatrix_u16.h               \
+                           include/packages/tmatrix/tmat.h                     \
+                           include/packages/tmatrix/tmat_z.h                   \
+                           include/packages/tmatrix/tmat_d.h                   \
+                           include/packages/tmatrix/tmat_c.h                   \
+                           include/packages/tmatrix/tmat_z.h                   \
+                           include/packages/tmatrix/tmat_s.h                   \
+                           include/packages/tmatrix/tmat_u8.h                  \
+                           include/packages/tmatrix/tmat_u16.h                  
 
-## *EOF*
+## *EOF* 
